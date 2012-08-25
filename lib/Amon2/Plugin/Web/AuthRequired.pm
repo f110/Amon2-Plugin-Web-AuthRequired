@@ -5,7 +5,7 @@ use 5.012004;
 our $VERSION = '0.01';
 
 my @rules;
-my $default_match = 1;
+my $default_match = 0;
 my $template = undef;
 my $authenticator = undef;
 sub init {
@@ -22,9 +22,9 @@ sub init {
         next unless $rule->{matcher} eq 'all';
 
         if ($rule->{target} eq 'allow') {
-            $default_match = 0;
-        } else {
             $default_match = 1;
+        } else {
+            $default_match = 0;
         }
     }
 
@@ -39,23 +39,8 @@ sub init {
 sub before_dispatch {
     my ($class) = @_;
 
-    my $match_result = $default_match;
-    for my $rule (@rules) {
-        if (index($rule->{target}, "allow") != -1
-                    && $class->req->path_info =~ /$rule->{matcher}/) {
-            $match_result = 0;
-            next;
-        }
-
-        if (index($rule->{target}, "deny") != -1
-                    && $class->req->path_info =~ /$rule->{matcher}/) {
-            $match_result = 1;
-            next;
-        }
-    }
-
     # Allow access
-    return unless $match_result;
+    return if _is_allow_access($class->req->path_info);
 
     return if ($authenticator->is_authenticated_user($class));
 
@@ -64,6 +49,27 @@ sub before_dispatch {
     } else {
         $class->res_404;
     }
+}
+
+sub _is_allow_access {
+    my $path_info = shift;
+
+    my $match_result = $default_match;
+    for my $rule (@rules) {
+        if (index($rule->{target}, "allow") != -1
+                    && $path_info =~ /$rule->{matcher}/) {
+            $match_result = 1;
+            next;
+        }
+
+        if (index($rule->{target}, "deny") != -1
+                    && $path_info =~ /$rule->{matcher}/) {
+            $match_result = 0;
+            next;
+        }
+    }
+
+    return $match_result;
 }
 
 1;
