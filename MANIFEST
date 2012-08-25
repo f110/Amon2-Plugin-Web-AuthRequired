@@ -1,0 +1,6 @@
+Changes
+Makefile.PL
+MANIFEST
+README
+t/Amon2-Plugin-Web-AuthRequired.t
+lib/Amon2/Plugin/Web/AuthRequired.pm
