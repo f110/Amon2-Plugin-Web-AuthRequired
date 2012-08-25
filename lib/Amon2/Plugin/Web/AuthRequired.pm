@@ -71,20 +71,52 @@ __END__
 
 =head1 NAME
 
-Amon2::Plugin::Web::AuthRequired - Perl extension for blah blah blah
+Amon2::Plugin::Web::AuthRequired
 
 =head1 SYNOPSIS
 
+  package YourApp::Web;
+  use parent qw/YourApp Amon2::Web/;
+  use Amon2::Plugin::Web::AuthRequired;
+
+  __PACKAGE__->load_plugins('Web::AuthRequired', +{
+      Authenticator => YourApp::Auth::Authenticator->new(),
+      template => "login.tt",
+      rules = [
+          {deny => 'all'},
+          {allow => '/login'},
+      ],
+  });
+  1;
+
+  package YourApp::Auth::Authenticator;
+  use List::MoreUtils qw/any/;
+
+  my @users = qw(
+      test
+      foo
+      bar
+  );
+  sub is_authenticated_user {
+      my $class = shift; # $class is YourApp::Web
+
+      return 1 if any { $class->req->session->get('username') eq $_ } @users;
+      return 0;
+  }
+
+  1;
+
+=head1 CONFIGURATION
+
+=item Authenticator
+
+=item template
+
+=item rules
+
 =head1 SEE ALSO
 
-Mention other useful documentation such as the documentation of
-related modules or operating system documentation (such as man pages
-in UNIX), or any relevant external documentation such as RFCs or
-standards.
-
-If you have a mailing list set up for your module, mention it here.
-
-If you have a web site set up for your module, mention it here.
+L<Amon2>
 
 =head1 AUTHOR
 
@@ -97,6 +129,5 @@ Copyright (C) 2012 by Fumihiro Itoh
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.12.4 or,
 at your option, any later version of Perl 5 you may have available.
-
 
 =cut
